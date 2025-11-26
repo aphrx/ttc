@@ -2,7 +2,13 @@
 
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useState,
+  useRef,
+} from 'react';
 
 type Stop = {
   stop_name: string;
@@ -23,10 +29,29 @@ type StopResponse = {
   schedule: Schedule;
 };
 
+function isStopResponse(value: unknown): value is StopResponse {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<StopResponse>;
+  return (
+    !!candidate.stop &&
+    typeof candidate.stop.stop_name === 'string' &&
+    typeof candidate.stop.stop_code === 'string' &&
+    typeof candidate.schedule === 'object'
+  );
+}
+
 function useStopData(stopCode: string) {
   const [data, setData] = useState<StopResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
+
+  useEffect(() => {
+    setData(null);
+    setLoading(true);
+    setError(null);
+    hasLoadedRef.current = false;
+  }, [stopCode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,16 +67,29 @@ function useStopData(stopCode: string) {
           throw new Error(text || `Error ${res.status}`);
         }
 
-        const json = (await res.json()) as StopResponse;
+        const json = await res.json();
+        if (!isStopResponse(json)) {
+          const errorMessage =
+            (json && typeof (json as any).error === 'string'
+              ? (json as any).error
+              : null) || 'Unexpected response from server';
+          throw new Error(errorMessage);
+        }
+
         if (!cancelled) {
           setData(json);
           setError(null);
           setLoading(false);
+          hasLoadedRef.current = true;
         }
       } catch (err: any) {
         if (!cancelled) {
-          setError(err.message);
-          setLoading(false);
+          if (!hasLoadedRef.current) {
+            setError(err.message);
+            setLoading(false);
+          } else {
+            console.warn('Stop data update failed; keeping existing data', err);
+          }
         }
       }
     };
@@ -68,7 +106,7 @@ function useStopData(stopCode: string) {
   return { data, loading, error };
 }
 
-const REFRESH_INTERVAL_MS = 30_000;
+const REFRESH_INTERVAL_MS = 60_000;
 const BASE_CARD_WIDTH = 140;
 const STACK_OVERHANG = 48;
 const STACK_VISIBLE_GAP = 6;
