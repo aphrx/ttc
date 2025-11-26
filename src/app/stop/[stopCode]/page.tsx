@@ -73,6 +73,12 @@ const BASE_CARD_WIDTH = 140;
 const STACK_OVERHANG = 48;
 const STACK_VISIBLE_GAP = 6;
 
+function formatTime(minutes?: number) {
+  if (minutes == null) return '--';
+  if (minutes <= 0) return 'Due';
+  return `${minutes} min`;
+}
+
 const SCREEN_STYLE: CSSProperties = {
   width: '100vw',
   height: '100vh',
@@ -308,7 +314,7 @@ function Row({ route, info, style, delay = 0 }: RowProps) {
         ...style,
       }}
     >
-      <PrimaryCard>
+      <PrimaryCard hasStack={stack.length > 0}>
         <RowLeft>
           <ModeIcon mode={mode_name} />
           <RoutePill>{routeCode}</RoutePill>
@@ -316,7 +322,7 @@ function Row({ route, info, style, delay = 0 }: RowProps) {
         </RowLeft>
 
         <RowRight>
-          <BigTime>{next != null ? `${next} min` : '--'}</BigTime>
+          <BigTime>{formatTime(next)}</BigTime>
         </RowRight>
       </PrimaryCard>
 
@@ -362,13 +368,19 @@ function StackedCard({ index, time }: StackedCardProps) {
           padding: '0.35rem 0.6rem',
         }}
       >
-        <span style={{ fontSize: '2rem', fontWeight: 700 }}>{time} min</span>
+        <span style={{ fontSize: '2rem', fontWeight: 700 }}>{formatTime(time)}</span>
       </div>
     </div>
   );
 }
 
-function PrimaryCard({ children }: { children: ReactNode }) {
+function PrimaryCard({
+  children,
+  hasStack = false,
+}: {
+  children: ReactNode;
+  hasStack?: boolean;
+}) {
   const baseWidth = 140;
   const overhang = 48;
   const visibleGap = 5;
@@ -388,7 +400,7 @@ function PrimaryCard({ children }: { children: ReactNode }) {
         justifyContent: 'space-between',
         gap: '1.2rem',
         zIndex: 100,
-        marginRight: -(overhang - visibleGap)/2,
+        marginRight: hasStack ? -(overhang - visibleGap) / 2 : 0,
       }}
     >
       {children}
@@ -563,13 +575,23 @@ function ProtoBuzzAd() {
           Sponsored · Protobuzz
         </span>
         <strong style={{ fontSize: '1.2rem' }}>
-          Protobuzz | Smart Buzzer App for Apartments & Condos
+          Protobuzz - Smart Buzzer App for Apartments & Condos
         </strong>
         <span style={{ fontSize: '0.95rem', opacity: 0.85, lineHeight: 1.3 }}>
-          Protobuzz is the apartment buzzer app that delivers remote buzzer access, virtual callbox automation, and guest codes without new hardware.
+          With Protobuzz, users can effortlessly automate and schedule buzzer activities to grant access to visitors, deliveries, and guests right from your smartphone.
         </span>
       </div>
-      <div style={{ fontSize: '0.9rem', opacity: 0.85 }}>Learn more →</div>
+      <div
+        style={{
+          fontSize: '2rem',
+          opacity: 0.9,
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        ›
+      </div>
     </a>
   );
 }
