@@ -44,12 +44,14 @@ function useStopData(stopCode: string) {
   const [data, setData] = useState<StopResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialData, setHasInitialData] = useState(false);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
     setData(null);
     setLoading(true);
     setError(null);
+    setHasInitialData(false);
     hasLoadedRef.current = false;
   }, [stopCode]);
 
@@ -80,6 +82,7 @@ function useStopData(stopCode: string) {
           setData(json);
           setError(null);
           setLoading(false);
+          setHasInitialData(true);
           hasLoadedRef.current = true;
         }
       } catch (err: any) {
@@ -103,7 +106,7 @@ function useStopData(stopCode: string) {
     };
   }, [stopCode]);
 
-  return { data, loading, error };
+  return { data, loading, error, hasInitialData };
 }
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -169,7 +172,15 @@ const STACK_CARD_BASE_STYLE: CSSProperties = {
 
 export default function StopBoardPage() {
   const { stopCode } = useParams() as { stopCode: string };
-  const { data, loading, error } = useStopData(stopCode);
+  const { data, loading, error, hasInitialData } = useStopData(stopCode);
+
+  if (!hasInitialData) {
+    return (
+      <Screen>
+        <Loading>Please wait - live data will appear shortly.</Loading>
+      </Screen>
+    );
+  }
 
   if (loading) {
     return (
