@@ -297,6 +297,11 @@ function Row({ route, info, style, delay = 0 }: RowProps) {
   const [next, ...rest] = minutes;
   const stack = rest.slice(0, 3);
   const routeCode = route;
+  const routeNumber = parseInt(routeCode, 10);
+  const isThreeHundredSeries =
+    Number.isFinite(routeNumber) && routeNumber >= 300 && routeNumber < 400;
+  const isNineHundredSeries =
+    Number.isFinite(routeNumber) && routeNumber >= 900 && routeNumber < 1000;
 
   return (
     <div
@@ -317,7 +322,12 @@ function Row({ route, info, style, delay = 0 }: RowProps) {
       <PrimaryCard hasStack={stack.length > 0}>
         <RowLeft>
           <ModeIcon mode={mode_name} />
-          <RoutePill>{routeCode}</RoutePill>
+          <RoutePill
+            isThreeHundredSeries={isThreeHundredSeries}
+            isNineHundredSeries={isNineHundredSeries}
+          >
+            {routeCode}
+          </RoutePill>
           <RouteLabel name={route_long_name || routeCode} />
         </RowLeft>
 
@@ -483,7 +493,35 @@ function ModeIcon({ mode }: ModeIconProps) {
   );
 }
 
-function RoutePill({ children }: { children: ReactNode }) {
+function RoutePill({
+  children,
+  isThreeHundredSeries = false,
+  isNineHundredSeries = false,
+}: {
+  children: ReactNode;
+  isThreeHundredSeries?: boolean;
+  isNineHundredSeries?: boolean;
+}) {
+  const { background, boxShadow } = isNineHundredSeries
+    ? {
+        background:
+          'linear-gradient(160deg, rgba(74, 222, 128, 0.95), rgba(22, 163, 74, 0.85))',
+        boxShadow:
+          '0 18px 30px rgba(34, 197, 94, 0.35), inset 0 0 0 1px rgba(255,255,255,0.3)',
+      }
+    : isThreeHundredSeries
+      ? {
+          background:
+            'linear-gradient(160deg, rgba(96, 165, 250, 0.95), rgba(37, 99, 235, 0.85))',
+          boxShadow:
+            '0 18px 30px rgba(59, 130, 246, 0.35), inset 0 0 0 1px rgba(255,255,255,0.3)',
+        }
+      : {
+          background:
+            'linear-gradient(160deg, rgba(248, 113, 113, 0.95), rgba(239, 68, 68, 0.75))',
+          boxShadow:
+            '0 18px 30px rgba(239, 68, 68, 0.35), inset 0 0 0 1px rgba(255,255,255,0.25)',
+        };
   return (
     <div
       style={{
@@ -497,10 +535,8 @@ function RoutePill({ children }: { children: ReactNode }) {
         alignItems: 'center',
         justifyContent: 'center',
         textTransform: 'uppercase',
-        background:
-          'linear-gradient(160deg, rgba(248, 113, 113, 0.95), rgba(239, 68, 68, 0.75))',
-        boxShadow:
-          '0 18px 30px rgba(239, 68, 68, 0.35), inset 0 0 0 1px rgba(255,255,255,0.25)',
+        background,
+        boxShadow,
         letterSpacing: '0.08em',
       }}
     >
